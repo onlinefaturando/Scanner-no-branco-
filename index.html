@@ -1,48 +1,91 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>White Scanner Pro</title>
     <style>
-        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
-        .card { background:#1e293b; padding:20px; border-radius:15px; max-width:350px; margin: 0 auto; border: 1px solid #334155; }
-        input { width: 85%; padding:15px; border-radius:10px; border:none; margin-bottom:15px; text-align:center; font-size:16px; color: #000; }
-        button { width: 90%; padding:15px; border-radius:10px; border:none; background:#22c55e; color:#000; font-weight:bold; cursor:pointer; font-size:16px; }
-        #saida { margin-top:20px; font-weight:bold; font-size:18px; min-height: 30px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#0f172a; color:#fff; text-align:center; padding:10px; margin:0; }
+        .card { background:#1e293b; padding:20px; border-radius:20px; margin:10px auto; max-width:400px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); }
+        h2 { margin-bottom: 5px; font-size: 22px; }
+        .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 20px; }
+        
+        /* Botões de Cores */
+        .btn-group { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+        .btn-color { flex: 1; padding: 20px 0; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; transition: transform 0.1s; }
+        .btn-red { background: #ef4444; color: white; }
+        .btn-black { background: #18181b; color: white; border: 1px solid #3f3f46; }
+        .btn-white { background: #f8fafc; color: #000; }
+        .btn-color:active { transform: scale(0.95); opacity: 0.8; }
+
+        /* Histórico e Ações */
+        #input-visual { background: #0f172a; padding: 15px; border-radius: 10px; margin-bottom: 15px; word-wrap: break-word; min-height: 20px; font-family: monospace; color: #22c55e; }
+        .btn-clear { background: transparent; color: #94a3b8; border: 1px solid #3f3f46; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; margin-top: 10px; }
+        
+        /* Alerta de Sinal */
+        .alert { font-size: 20px; margin-top: 20px; font-weight: 800; padding: 15px; border-radius: 12px; min-height: 30px; text-transform: uppercase; }
+        .status-wait { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-go { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 2px solid #22c55e; animation: pulse 1.5s infinite; }
+        .status-alert { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
-    <h2>⚪ SCANNER PESSOAL</h2>
+
     <div class="card">
-        <p>Insira a sequência (ex: r,b,w):</p>
-        <input type="text" id="input" placeholder="r,b,r,b,w">
-        <button onclick="analisar()">ESCANEAR AGORA</button>
-        <div id="saida">Aguardando dados...</div>
+        <h2>⚪ White Scanner Pro</h2>
+        <p class="subtitle">Toque na cor que saiu na roleta</p>
+
+        <div class="btn-group">
+            <button class="btn-color btn-red" onclick="add('R')">VERMELHO</button>
+            <button class="btn-color btn-black" onclick="add('B')">PRETO</button>
+            <button class="btn-color btn-white" onclick="add('W')">BRANCO</button>
+        </div>
+
+        <div id="input-visual">Aguardando entrada...</div>
+        
+        <div class="alert status-wait" id="saida">AGUARDANDO DADOS</div>
+
+        <button class="btn-clear" onclick="limpar()">LIMPAR HISTÓRICO</button>
     </div>
 
-    <script>
-        function analisar() {
-            let entrada = document.getElementById('input').value.toLowerCase().replace(/\s/g, '');
-            if(!entrada) return;
-            let arr = entrada.split(',');
-            let ultimos = arr.slice(-6).join('');
-            let elementoSaida = document.getElementById('saida');
-            
-            let msg = "❌ AGUARDE MELHOR CENÁRIO";
-            let cor = "#ef4444";
+<script>
+    let historico = [];
 
-            if (arr[arr.length-1] === 'w') {
-                msg = "⚪ BRANCO SAIU! Aguarde.";
-                cor = "#fff";
-            } else if (/(rb){2,}|(br){2,}/.test(ultimos)) {
-                msg = "🔥 ENTRAR AGORA (Chance Branco)";
-                cor = "#22c55e";
-            }
-            
-            elementoSaida.innerText = msg;
-            elementoSaida.style.color = cor;
+    function add(cor) {
+        historico.push(cor);
+        if (historico.length > 50) historico.shift(); // Mantém as últimas 50
+        atualizarInterface();
+        analisar();
+    }
+
+    function limpar() {
+        historico = [];
+        atualizarInterface();
+        const saida = document.getElementById('saida');
+        saida.innerText = "AGUARDANDO DADOS";
+        saida.className = "alert status-wait";
+    }
+
+    function atualizarInterface() {
+        const visual = document.getElementById('input-visual');
+        visual.innerText = historico.join(', ');
+    }
+
+    function analisar() {
+        let semBranco = 0;
+        for (let i = historico.length - 1; i >= 0; i--) {
+            if (historico[i] === 'W') break;
+            semBranco++;
         }
-    </script>
-</body>
-</html>
+
+        let ultimos6 = historico.slice(-6).join('');
+        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos6);
+        let repeticao = /(RRR|BBB)/.test(ultimos6);
+        let elementoSaida = document.getElementById('saida');
+        
+        // Regras de Estratégia
+        if (historico[historico.length - 1] === 'W') {
+            elementoSaida.innerText = "⚪ BRANCO SAIU! ZERANDO...";
