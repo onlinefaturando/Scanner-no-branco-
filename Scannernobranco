@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Pessoal</title>
+    <style>
+        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
+        .card { background:#1e293b; padding:20px; border-radius:15px; max-width:350px; margin: 0 auto; border: 1px solid #334155; }
+        input { width: 85%; padding:15px; border-radius:10px; border:none; margin-bottom:15px; font-size:16px; text-align:center; }
+        button { width: 90%; padding:15px; border-radius:10px; border:none; background:#22c55e; color:#000; font-weight:bold; cursor:pointer; font-size:16px; }
+        #saida { margin-top:20px; font-weight:bold; font-size:18px; min-height: 30px; }
+    </style>
+</head>
+<body>
+    <h2>⚪ SCANNER BRANCO</h2>
+    <div class="card">
+        <p>Digite a sequência (ex: r,b,w,r):</p>
+        <input type="text" id="input" placeholder="r,b,r,b,w">
+        <button onclick="analisar()">ESCANEAR</button>
+        <div id="saida">Aguardando...</div>
+    </div>
+    <script>
+        function analisar() {
+            let entrada = document.getElementById('input').value.toLowerCase().replace(/\s/g, '');
+            if(!entrada) return;
+            let arr = entrada.split(',');
+            let ultimos = arr.slice(-6).join('');
+            let msg = "❌ AGUARDE MELHOR CENÁRIO";
+            let cor = "#ef4444";
+            if (arr[arr.length-1] === 'w') {
+                msg = "⚪ BRANCO SAIU!";
+                cor = "#fff";
+            } else if (/(rb){2,}|(br){2,}/.test(ultimos)) {
+                msg = "🔥 ENTRAR AGORA!";
+                cor = "#22c55e";
+            }
+            document.getElementById('saida').innerText = msg;
+            document.getElementById('saida').style.color = cor;
+        }
+    </script>
+</body>
+</html>
