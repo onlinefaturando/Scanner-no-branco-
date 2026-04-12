@@ -4,111 +4,172 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>White Scanner Pro</title>
-    <!-- Configuração para virar Web App -->
+    <!-- Configurações para rodar como App (Tela Cheia) -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background:#0f172a; color:#fff; text-align:center; padding:15px; margin:0; }
-        .card { background:#1e293b; padding:20px; border-radius:20px; margin:10px auto; max-width:400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .btn-color { padding:25px 0; border:none; border-radius:15px; font-weight:bold; font-size:22px; cursor:pointer; transition: 0.2s; color: #fff; }
-        .btn-color:active { transform: scale(0.9); opacity: 0.8; }
-        
-        /* Cores dos botões */
-        .btn-red { background: #ef4444; box-shadow: 0 4px 0 #991b1b; }
-        .btn-white { background: #ffffff; color: #000; box-shadow: 0 4px 0 #cbd5e1; }
-        .btn-black { background: #111827; border: 1px solid #334155; box-shadow: 0 4px 0 #000; }
+        :root {
+            --bg-main: #0f1923;
+            --bg-card: #1a242d;
+            --blaze-red: #f12c4c;
+            --blaze-black: #262f3c;
+            --blaze-white: #ffffff;
+            --text-gray: #94a3b8;
+        }
 
-        input { padding:15px; border-radius:12px; border:1px solid #334155; width:90%; font-size:14px; margin-bottom: 20px; background: #0f172a; color: #94a3b8; text-align: center; pointer-events: none; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-main); 
+            color: #fff; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px;
+        }
+
+        .app-container { 
+            background: var(--bg-card); 
+            padding: 20px; 
+            border-radius: 12px; 
+            width: 100%; 
+            max-width: 400px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-bottom: 4px solid var(--blaze-red);
+        }
+
+        h2 { color: var(--blaze-red); text-align: center; font-size: 1.2rem; margin-bottom: 20px; letter-spacing: 1px; }
+
+        .label { color: var(--text-gray); font-size: 12px; margin-bottom: 10px; display: block; text-align: center; }
+
+        /* Botões de entrada */
+        .btn-grid { display: flex; gap: 10px; margin-bottom: 25px; }
         
-        .clear-btn { background:transparent; color:#ef4444; border: 1px solid #ef4444; padding:10px; width:100%; border-radius:12px; cursor:pointer; font-weight: bold; margin-top: 10px; }
-        
-        .alert { font-size:18px; margin-top:20px; font-weight: bold; padding: 20px; border-radius: 12px; min-height: 25px; transition: 0.3s; }
-        .status-badge { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; }
+        .btn-input { 
+            flex: 1; border: none; border-radius: 8px; height: 55px; cursor: pointer; 
+            font-weight: bold; font-size: 14px; transition: transform 0.1s;
+        }
+        .btn-red { background: var(--blaze-red); color: white; }
+        .btn-black { background: var(--blaze-black); color: white; border: 1px solid #3d4d5e; }
+        .btn-white { background: var(--blaze-white); color: #000; }
+        .btn-input:active { transform: scale(0.95); }
+
+        /* Histórico de Bolinhas */
+        .history-container {
+            background: #091018;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            min-height: 35px;
+            margin-bottom: 25px;
+            border: 1px solid #262f3c;
+            flex-direction: row-reverse; /* Novas aparecem na esquerda */
+            justify-content: flex-end;
+        }
+
+        .dot { 
+            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 11px; font-weight: bold;
+        }
+
+        /* Área de Resultado */
+        .status-box { 
+            padding: 20px; border-radius: 8px; text-align: center;
+            font-weight: bold; background: #262f3c; margin-bottom: 15px;
+            border-left: 5px solid var(--text-gray);
+        }
+
+        .btn-reset { 
+            background: transparent; color: #ef4444; border: 1px solid #ef4444; 
+            padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
-    <h2 style="margin-top:20px">⚪ White Scanner</h2>
-
-    <div class="card">
-        <span class="status-badge">Toque na cor que saiu:</span>
+    <div class="app-container">
+        <h2>⚪ WHITE SCANNER PRO</h2>
+        
+        <span class="label">INSIRA OS ÚLTIMOS RESULTADOS</span>
         <div class="btn-grid">
-            <button onclick="addCor('R')" class="btn-color btn-red">R</button>
-            <button onclick="addCor('W')" class="btn-color btn-white">W</button>
-            <button onclick="addCor('B')" class="btn-color btn-black">B</button>
+            <button class="btn-input btn-red" onclick="add('R')">VERMELHO</button>
+            <button class="btn-input btn-white" onclick="add('W')">BRANCO</button>
+            <button class="btn-input btn-black" onclick="add('B')">PRETO</button>
         </div>
 
-        <input type="text" id="input" placeholder="Aguardando dados...">
-        
-        <div class="alert" id="saida">Aguardando sequência...</div>
+        <span class="label">HISTÓRICO RECENTE</span>
+        <div class="history-container" id="history"></div>
 
-        <button onclick="limpar()" class="clear-btn">LIMPAR HISTÓRICO</button>
+        <div class="status-box" id="status">AGUARDANDO DADOS...</div>
+        
+        <button class="btn-reset" onclick="reset()">LIMPAR TUDO</button>
     </div>
 
 <script>
-    // Carrega o histórico salvo assim que abre o app
-    window.onload = function() {
-        const salvo = localStorage.getItem('historico_scanner');
-        if (salvo) {
-            document.getElementById('input').value = salvo;
-            analisar();
-        }
-    };
+    let dados = [];
 
-    function addCor(cor) {
-        let campo = document.getElementById('input');
-        let atual = campo.value;
-        // Adiciona a cor e salva no celular
-        campo.value = atual === "" ? cor : atual + "," + cor;
-        localStorage.setItem('historico_scanner', campo.value);
+    function add(cor) {
+        dados.push(cor);
+        if(dados.length > 50) dados.shift();
+        updateUI();
         analisar();
     }
 
-    function limpar() {
-        if(confirm("Deseja apagar o histórico atual?")) {
-            document.getElementById('input').value = "";
-            document.getElementById('saida').innerText = "Histórico limpo";
-            document.getElementById('saida').style.background = "transparent";
-            localStorage.removeItem('historico_scanner');
-        }
+    function updateUI() {
+        const historyDiv = document.getElementById('history');
+        historyDiv.innerHTML = '';
+        
+        // Renderiza as bolinhas (as mais recentes aparecem primeiro)
+        dados.slice().reverse().forEach(cor => {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            if(cor === 'R') { dot.style.background = '#f12c4c'; dot.innerText = ''; }
+            if(cor === 'B') { dot.style.background = '#262f3c'; dot.innerText = ''; }
+            if(cor === 'W') { dot.style.background = '#ffffff'; dot.style.color = '#000'; dot.innerText = 'W'; }
+            historyDiv.appendChild(dot);
+        });
     }
 
     function analisar() {
-        let entrada = document.getElementById('input').value.toUpperCase();
-        let arr = entrada.split(',');
-        let elementoSaida = document.getElementById('saida');
-        
-        // Conta quantas casas faz que o branco (W) não sai
+        const status = document.getElementById('status');
+        if(dados.length < 3) return;
+
         let semBranco = 0;
-        for (let i = arr.length - 1; i >= 0; i--) {
-            if (arr[i] === 'W') break;
+        for(let i = dados.length - 1; i >= 0; i--) {
+            if(dados[i] === 'W') break;
             semBranco++;
         }
 
-        // Padrões (Últimas 6 cores)
-        let ultimos = arr.slice(-6).join('');
-        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
-        let repeticao = /(RRR|BBB)/.test(ultimos);
+        const ultimos = dados.slice(-6).join('');
+        const alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
         
-        // --- LÓGICA DE ALERTA ---
-        if (arr[arr.length - 1] === 'W') {
-            exibir("⚪ BRANCO SAIU! Aguardando novo ciclo...", "#334155");
-        } else if (semBranco >= 15 && alternancia) {
-            exibir("🔥 ENTRAR AGORA! (Padrão de Alternância)", "#166534");
-        } else if (semBranco >= 30 && !repeticao) {
-            exibir("🚨 ALTA PROBABILIDADE (Cluster Ativo)", "#92400e");
+        if(dados[dados.length-1] === 'W') {
+            status.innerText = "⚪ BRANCO SAIU! AGUARDANDO...";
+            status.style.borderLeftColor = "#fff";
+            status.style.color = "#fff";
+        } else if(semBranco >= 15 && alternancia) {
+            status.innerText = "🔥 ENTRAR AGORA (PADRÃO X1)";
+            status.style.borderLeftColor = "#22c55e";
+            status.style.color = "#22c55e";
+        } else if(semBranco >= 35) {
+            status.innerText = "🚨 ALERTA: MUITO TEMPO SEM BRANCO";
+            status.style.borderLeftColor = "#fbbf24";
+            status.style.color = "#fbbf24";
         } else {
-            exibir("⌛ Analisando... (" + semBranco + " casas sem W)", "transparent");
+            status.innerText = "❌ AGUARDE O PADRÃO";
+            status.style.borderLeftColor = "#ef4444";
+            status.style.color = "#ef4444";
         }
     }
 
-    function exibir(txt, corFundo) {
-        let saida = document.getElementById('saida');
-        saida.innerText = txt;
-        saida.style.background = corFundo;
+    function reset() {
+        dados = [];
+        updateUI();
+        document.getElementById('status').innerText = "HISTÓRICO LIMPO";
+        document.getElementById('status').style.borderLeftColor = "#94a3b8";
     }
 </script>
 </body>
