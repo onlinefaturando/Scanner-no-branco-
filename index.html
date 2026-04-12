@@ -4,87 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>White Scanner Pro</title>
+    <!-- Configuração para virar Web App -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <style>
-        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:10px; margin:0; }
-        .card { background:#1e293b; padding:20px; border-radius:20px; margin:10px auto; max-width:400px; box-shadow: 0 10px 15px rgba(0,0,0,0.5); }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background:#0f172a; color:#fff; text-align:center; padding:15px; margin:0; }
+        .card { background:#1e293b; padding:20px; border-radius:20px; margin:10px auto; max-width:400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
-        /* Botões de Cores */
-        .btn-group { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
-        .btn-color { flex: 1; padding: 25px 0; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.1s; }
-        .btn-red { background: #ef4444; color: white; }
-        .btn-black { background: #000; color: white; border: 1px solid #3f3f46; }
-        .btn-white { background: #fff; color: #000; }
-        .btn-color:active { transform: scale(0.9); }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .btn-color { padding:25px 0; border:none; border-radius:15px; font-weight:bold; font-size:22px; cursor:pointer; transition: 0.2s; color: #fff; }
+        .btn-color:active { transform: scale(0.9); opacity: 0.8; }
+        
+        /* Cores dos botões */
+        .btn-red { background: #ef4444; box-shadow: 0 4px 0 #991b1b; }
+        .btn-white { background: #ffffff; color: #000; box-shadow: 0 4px 0 #cbd5e1; }
+        .btn-black { background: #111827; border: 1px solid #334155; box-shadow: 0 4px 0 #000; }
 
-        /* Histórico */
-        #input-visual { background: #0f172a; padding: 15px; border-radius: 10px; margin-bottom: 15px; min-height: 20px; color: #22c55e; font-family: monospace; }
+        input { padding:15px; border-radius:12px; border:1px solid #334155; width:90%; font-size:14px; margin-bottom: 20px; background: #0f172a; color: #94a3b8; text-align: center; pointer-events: none; }
         
-        /* Alertas */
-        .alert { font-size: 18px; font-weight: bold; padding: 20px; border-radius: 12px; margin-bottom: 10px; }
-        .status-wait { background: #334155; color: #94a3b8; }
-        .status-go { background: #14532d; color: #22c55e; border: 2px solid #22c55e; animation: flash 1s infinite; }
+        .clear-btn { background:transparent; color:#ef4444; border: 1px solid #ef4444; padding:10px; width:100%; border-radius:12px; cursor:pointer; font-weight: bold; margin-top: 10px; }
         
-        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-        
-        .btn-clear { background: none; color: #ef4444; border: 1px solid #ef4444; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; }
+        .alert { font-size:18px; margin-top:20px; font-weight: bold; padding: 20px; border-radius: 12px; min-height: 25px; transition: 0.3s; }
+        .status-badge { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>⚪ White Scanner Pro</h2>
-        <p>Toque na cor que saiu na roleta:</p>
+    <h2 style="margin-top:20px">⚪ White Scanner</h2>
 
-        <div class="btn-group">
-            <button class="btn-color btn-red" onclick="add('R')">VERMELHO</button>
-            <button class="btn-color btn-black" onclick="add('B')">PRETO</button>
-            <button class="btn-color btn-white" onclick="add('W')">BRANCO</button>
+    <div class="card">
+        <span class="status-badge">Toque na cor que saiu:</span>
+        <div class="btn-grid">
+            <button onclick="addCor('R')" class="btn-color btn-red">R</button>
+            <button onclick="addCor('W')" class="btn-color btn-white">W</button>
+            <button onclick="addCor('B')" class="btn-color btn-black">B</button>
         </div>
 
-        <div id="input-visual">Aguardando...</div>
-        <div class="alert status-wait" id="saida">SEM SINAL</div>
-        <button class="btn-clear" onclick="limpar()">LIMPAR TUDO</button>
+        <input type="text" id="input" placeholder="Aguardando dados...">
+        
+        <div class="alert" id="saida">Aguardando sequência...</div>
+
+        <button onclick="limpar()" class="clear-btn">LIMPAR HISTÓRICO</button>
     </div>
 
 <script>
-    let historico = [];
+    // Carrega o histórico salvo assim que abre o app
+    window.onload = function() {
+        const salvo = localStorage.getItem('historico_scanner');
+        if (salvo) {
+            document.getElementById('input').value = salvo;
+            analisar();
+        }
+    };
 
-    function add(cor) {
-        historico.push(cor);
-        if (historico.length > 40) historico.shift();
-        document.getElementById('input-visual').innerText = historico.join(', ');
+    function addCor(cor) {
+        let campo = document.getElementById('input');
+        let atual = campo.value;
+        // Adiciona a cor e salva no celular
+        campo.value = atual === "" ? cor : atual + "," + cor;
+        localStorage.setItem('historico_scanner', campo.value);
         analisar();
     }
 
     function limpar() {
-        historico = [];
-        document.getElementById('input-visual').innerText = "Aguardando...";
-        let s = document.getElementById('saida');
-        s.innerText = "SEM SINAL";
-        s.className = "alert status-wait";
+        if(confirm("Deseja apagar o histórico atual?")) {
+            document.getElementById('input').value = "";
+            document.getElementById('saida').innerText = "Histórico limpo";
+            document.getElementById('saida').style.background = "transparent";
+            localStorage.removeItem('historico_scanner');
+        }
     }
 
     function analisar() {
+        let entrada = document.getElementById('input').value.toUpperCase();
+        let arr = entrada.split(',');
+        let elementoSaida = document.getElementById('saida');
+        
+        // Conta quantas casas faz que o branco (W) não sai
         let semBranco = 0;
-        for (let i = historico.length - 1; i >= 0; i--) {
-            if (historico[i] === 'W') break;
+        for (let i = arr.length - 1; i >= 0; i--) {
+            if (arr[i] === 'W') break;
             semBranco++;
         }
 
-        let ultimos = historico.slice(-6).join('');
+        // Padrões (Últimas 6 cores)
+        let ultimos = arr.slice(-6).join('');
         let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
-        let s = document.getElementById('saida');
-
-        if (historico[historico.length-1] === 'W') {
-            s.innerText = "⚪ BRANCO SAIU!";
-            s.className = "alert status-wait";
-        } else if (semBranco >= 10 && alternancia) {
-            s.innerText = "🔥 ENTRAR NO BRANCO AGORA!";
-            s.className = "alert status-go";
+        let repeticao = /(RRR|BBB)/.test(ultimos);
+        
+        // --- LÓGICA DE ALERTA ---
+        if (arr[arr.length - 1] === 'W') {
+            exibir("⚪ BRANCO SAIU! Aguardando novo ciclo...", "#334155");
+        } else if (semBranco >= 15 && alternancia) {
+            exibir("🔥 ENTRAR AGORA! (Padrão de Alternância)", "#166534");
+        } else if (semBranco >= 30 && !repeticao) {
+            exibir("🚨 ALTA PROBABILIDADE (Cluster Ativo)", "#92400e");
         } else {
-            s.innerText = "❌ AGUARDE (" + semBranco + " rodadas s/ Branco)";
-            s.className = "alert status-wait";
+            exibir("⌛ Analisando... (" + semBranco + " casas sem W)", "transparent");
         }
+    }
+
+    function exibir(txt, corFundo) {
+        let saida = document.getElementById('saida');
+        saida.innerText = txt;
+        saida.style.background = corFundo;
     }
 </script>
 </body>
