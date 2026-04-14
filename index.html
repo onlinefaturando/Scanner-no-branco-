@@ -2,175 +2,77 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>White Scanner Pro</title>
-    <!-- Configurações para rodar como App (Tela Cheia) -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Scanner App</title>
+    <link rel="manifest" href="data:application/json,{\"name\":\"White Scanner\",\"short_name\":\"Scanner\",\"start_url\":\".\",\"display\":\"standalone\",\"background_color\":\"#0f172a\",\"theme_color\":\"#22c55e\"}">
     <style>
-        :root {
-            --bg-main: #0f1923;
-            --bg-card: #1a242d;
-            --blaze-red: #f12c4c;
-            --blaze-black: #262f3c;
-            --blaze-white: #ffffff;
-            --text-gray: #94a3b8;
-        }
-
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-main); 
-            color: #fff; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px;
-        }
-
-        .app-container { 
-            background: var(--bg-card); 
-            padding: 20px; 
-            border-radius: 12px; 
-            width: 100%; 
-            max-width: 400px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border-bottom: 4px solid var(--blaze-red);
-        }
-
-        h2 { color: var(--blaze-red); text-align: center; font-size: 1.2rem; margin-bottom: 20px; letter-spacing: 1px; }
-
-        .label { color: var(--text-gray); font-size: 12px; margin-bottom: 10px; display: block; text-align: center; }
-
-        /* Botões de entrada */
-        .btn-grid { display: flex; gap: 10px; margin-bottom: 25px; }
-        
-        .btn-input { 
-            flex: 1; border: none; border-radius: 8px; height: 55px; cursor: pointer; 
-            font-weight: bold; font-size: 14px; transition: transform 0.1s;
-        }
-        .btn-red { background: var(--blaze-red); color: white; }
-        .btn-black { background: var(--blaze-black); color: white; border: 1px solid #3d4d5e; }
-        .btn-white { background: var(--blaze-white); color: #000; }
-        .btn-input:active { transform: scale(0.95); }
-
-        /* Histórico de Bolinhas */
-        .history-container {
-            background: #091018;
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            min-height: 35px;
-            margin-bottom: 25px;
-            border: 1px solid #262f3c;
-            flex-direction: row-reverse; /* Novas aparecem na esquerda */
-            justify-content: flex-end;
-        }
-
-        .dot { 
-            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 11px; font-weight: bold;
-        }
-
-        /* Área de Resultado */
-        .status-box { 
-            padding: 20px; border-radius: 8px; text-align: center;
-            font-weight: bold; background: #262f3c; margin-bottom: 15px;
-            border-left: 5px solid var(--text-gray);
-        }
-
-        .btn-reset { 
-            background: transparent; color: #ef4444; border: 1px solid #ef4444; 
-            padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px;
-        }
+        body { font-family: Arial, sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
+        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:400px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        button { padding:15px; border:none; border-radius:12px; background:#22c55e; color:#000; font-weight:bold; width:100%; font-size:18px; cursor:pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); background:#16a34a; }
+        input { padding:15px; border-radius:12px; border:none; width:90%; font-size:16px; margin-bottom: 15px; text-align: center; background: #334155; color: white; }
+        .alert { font-size:18px; margin-top:20px; font-weight: bold; min-height: 25px; }
+        p { color: #94a3b8; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <h2>⚪ WHITE SCANNER PRO</h2>
-        
-        <span class="label">INSIRA OS ÚLTIMOS RESULTADOS</span>
-        <div class="btn-grid">
-            <button class="btn-input btn-red" onclick="add('R')">VERMELHO</button>
-            <button class="btn-input btn-white" onclick="add('W')">BRANCO</button>
-            <button class="btn-input btn-black" onclick="add('B')">PRETO</button>
-        </div>
+    <h2>⚪ White Scanner (App)</h2>
 
-        <span class="label">HISTÓRICO RECENTE</span>
-        <div class="history-container" id="history"></div>
-
-        <div class="status-box" id="status">AGUARDANDO DADOS...</div>
-        
-        <button class="btn-reset" onclick="reset()">LIMPAR TUDO</button>
+    <div class="card">
+        <p>Digite a sequência (ex: R,B,R,B,W)</p>
+        <input type="text" id="input" placeholder="R, B, R, B, W" autocomplete="off">
+        <br>
+        <button onclick="analisar()">ESCANEAR</button>
+        <div class="alert" id="saida"></div>
     </div>
 
 <script>
-    let dados = [];
-
-    function add(cor) {
-        dados.push(cor);
-        if(dados.length > 50) dados.shift();
-        updateUI();
-        analisar();
-    }
-
-    function updateUI() {
-        const historyDiv = document.getElementById('history');
-        historyDiv.innerHTML = '';
-        
-        // Renderiza as bolinhas (as mais recentes aparecem primeiro)
-        dados.slice().reverse().forEach(cor => {
-            const dot = document.createElement('div');
-            dot.className = 'dot';
-            if(cor === 'R') { dot.style.background = '#f12c4c'; dot.innerText = ''; }
-            if(cor === 'B') { dot.style.background = '#262f3c'; dot.innerText = ''; }
-            if(cor === 'W') { dot.style.background = '#ffffff'; dot.style.color = '#000'; dot.innerText = 'W'; }
-            historyDiv.appendChild(dot);
-        });
-    }
-
     function analisar() {
-        const status = document.getElementById('status');
-        if(dados.length < 3) return;
+        // Captura o valor e limpa espaços extras
+        let campo = document.getElementById('input');
+        let entrada = campo.value.toUpperCase().replace(/\s/g, '');
+        
+        if (!entrada) {
+            document.getElementById('saida').innerText = "⚠️ Digite algo primeiro!";
+            return;
+        }
 
+        let arr = entrada.split(',');
         let semBranco = 0;
-        for(let i = dados.length - 1; i >= 0; i--) {
-            if(dados[i] === 'W') break;
+
+        // Lógica para contar casas sem sair o Branco (W)
+        for (let i = arr.length - 1; i >= 0; i--) {
+            if (arr[i] === 'W') break;
             semBranco++;
         }
 
-        const ultimos = dados.slice(-6).join('');
-        const alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
+        // Pega os últimos 6 resultados para padrões
+        let ultimos = arr.slice(-6).join('');
+        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
+        let repeticao = /(RRR|BBB)/.test(ultimos);
         
-        if(dados[dados.length-1] === 'W') {
-            status.innerText = "⚪ BRANCO SAIU! AGUARDANDO...";
-            status.style.borderLeftColor = "#fff";
-            status.style.color = "#fff";
-        } else if(semBranco >= 15 && alternancia) {
-            status.innerText = "🔥 ENTRAR AGORA (PADRÃO X1)";
-            status.style.borderLeftColor = "#22c55e";
-            status.style.color = "#22c55e";
-        } else if(semBranco >= 35) {
-            status.innerText = "🚨 ALERTA: MUITO TEMPO SEM BRANCO";
-            status.style.borderLeftColor = "#fbbf24";
-            status.style.color = "#fbbf24";
-        } else {
-            status.innerText = "❌ AGUARDE O PADRÃO";
-            status.style.borderLeftColor = "#ef4444";
-            status.style.color = "#ef4444";
-        }
-    }
+        let elementoSaida = document.getElementById('saida');
+        let msg = "";
 
-    function reset() {
-        dados = [];
-        updateUI();
-        document.getElementById('status').innerText = "HISTÓRICO LIMPO";
-        document.getElementById('status').style.borderLeftColor = "#94a3b8";
+        // Regras de Alerta
+        if (arr[arr.length - 1] === 'W') {
+            msg = "⚪ Branco saiu! Aguardando próximo.";
+            elementoSaida.style.color = "#fff";
+        } else if (semBranco >= 20 && alternancia) {
+            msg = "🔥 ENTRAR AGORA (Alta chance branco)";
+            elementoSaida.style.color = "#22c55e";
+        } else if (semBranco >= 35 && !repeticao) {
+            msg = "🚨 CLUSTER ATIVO (Duplo/Triplo possível)";
+            elementoSaida.style.color = "#fbbf24";
+        } else {
+            msg = "❌ Aguarde melhor cenário";
+            elementoSaida.style.color = "#ef4444";
+        }
+
+        elementoSaida.innerText = msg;
     }
 </script>
+
 </body>
 </html>
