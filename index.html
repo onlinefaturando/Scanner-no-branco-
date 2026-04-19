@@ -1,64 +1,89 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner Branco</title>
+    <title>White Scanner PRO</title>
     <style>
-        body { font-family: Arial, sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
-        .card { background:#1e293b; padding:20px; border-radius:15px; max-width:400px; margin:auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        input { width:90%; padding:15px; margin:10px 0; border-radius:10px; border:none; font-size:16px; text-align:center; }
-        button { width:95%; padding:15px; background:#22c55e; border:none; border-radius:10px; font-weight:bold; font-size:18px; cursor:pointer; }
-        #saida { margin-top:20px; font-weight:bold; font-size:20px; min-height:30px; }
+        body { font-family: Arial; background:#0f172a; color:#fff; text-align:center; padding:20px; }
+        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:400px; border: 1px solid #334155; }
+        button { padding:15px; border:none; border-radius:12px; background:#22c55e; color:#000; font-weight:bold; width:100%; font-size:18px; cursor:pointer; }
+        input { padding:15px; border-radius:12px; border:none; width:90%; font-size:16px; margin-bottom:10px; background:#334155; color:#fff; text-align:center; }
+        .alert { font-size:18px; margin-top:15px; padding:10px; border-radius:8px; min-height:50px; display:flex; align-items:center; justify-content:center; }
+        .status-green { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .status-wait { background: rgba(248, 113, 113, 0.1); color: #94a3b8; }
+        .status-alert { background: rgba(234, 179, 8, 0.2); color: #facc15; border: 1px solid #eab308; }
     </style>
 </head>
 <body>
+    <h2>⚪ White Scanner PRO</h2>
     <div class="card">
-        <h2>⚪ White Scanner</h2>
-        <p>Digite a sequência (Ex: R,B,R,W)</p>
-        <input type="text" id="input" placeholder="R, B, R, W...">
-        <button onclick="analisar()">ESCANEAR</button>
-        <div id="saida">Aguardando dados...</div>
+        <p>Histórico (R, B, W):</p>
+        <input id="input" placeholder="Ex: R,B,R,B,B,R">
+        <button onclick="analisar()">ESCANEAR PADRÕES</button>
+        <div class="alert status-wait" id="saida">Aguardando dados...</div>
     </div>
 
-    <script>
-        function analisar() {
-            let campo = document.getElementById('input');
-            let saida = document.getElementById('saida');
-            let entrada = campo.value.toUpperCase().replace(/\s/g, '');
-            
-            if (!entrada) {
-                saida.innerText = "⚠️ Digite algo!";
-                return;
-            }
+<script>
+function analisar(){
+    let entrada = document.getElementById('input').value.toUpperCase().replace(/\s/g, '');
+    let arr = entrada.split(',');
+    let saidaDiv = document.getElementById('saida');
+    
+    if(arr.length < 5) {
+        saidaDiv.innerText = "Insira pelo menos 5 cores";
+        return;
+    }
 
-            let arr = entrada.split(',');
-            let semBranco = 0;
+    // 1. Cálculo de "Sem Branco"
+    let semBranco = 0;
+    for(let i=arr.length-1; i>=0; i--){
+        if(arr[i] === 'W') break;
+        semBranco++;
+    }
 
-            for (let i = arr.length - 1; i >= 0; i--) {
-                if (arr[i] === 'W') break;
-                semBranco++;
-            }
+    // 2. Captura de padrões recentes
+    let ultimos4 = arr.slice(-4).join('');
+    let ultimos5 = arr.slice(-5).join('');
+    
+    // Padrão de Simetria (Ex: RBBR ou BRRB)
+    let simetria = (arr[arr.length-1] === arr[arr.length-4] && arr[arr.length-2] === arr[arr.length-3]);
+    
+    // Padrão de Quebra de Tendência (Ex: RRRRB - cor mudou após surfe)
+    let surfeCansado = /(RRRRB|BBBBR)/.test(ultimos5);
+    
+    // Alternância (Xadrez)
+    let xadrez = /(RBRB|BRBR)/.test(ultimos4);
 
-            let ultimos = arr.slice(-6).join('');
-            let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
-            let repeticao = /(RRR|BBB)/.test(ultimos);
+    // --- LÓGICA DE DECISÃO ---
+    
+    let mensagem = "";
+    let classe = "status-wait";
 
-            if (arr[arr.length - 1] === 'W') {
-                saida.innerText = "⚪ Branco saiu!";
-                saida.style.color = "#fff";
-            } else if (semBranco >= 20 && alternancia) {
-                saida.innerText = "🔥 ENTRAR AGORA";
-                saida.style.color = "#22c55e";
-            } else if (semBranco >= 35 && !repeticao) {
-                saida.innerText = "🚨 CLUSTER ATIVO";
-                saida.style.color = "#fbbf24";
-            } else {
-                saida.innerText = "❌ Aguarde cenário";
-                saida.style.color = "#ef4444";
-            }
-        }
-    </script>
+    if (arr[arr.length-1] === 'W') {
+        mensagem = "⚪ Branco saiu! Aguardando respiro...";
+        classe = "status-wait";
+    } 
+    else if (semBranco >= 12 && (simetria || surfeCansado)) {
+        mensagem = "🔥 ENTRADA FORTE: Simetria/Quebra detectada!";
+        classe = "status-green";
+    }
+    else if (semBranco >= 15 && xadrez) {
+        mensagem = "⚡ ALERTA: Xadrez em zona de maturação!";
+        classe = "status-green";
+    }
+    else if (semBranco >= 25) {
+        mensagem = "🚨 CLUSTER ATIVO: Branco muito atrasado!";
+        classe = "status-alert";
+    }
+    else {
+        mensagem = "❌ Cenário Neutro (Sem Branco: " + semBranco + ")";
+        classe = "status-wait";
+    }
+
+    saidaDiv.innerText = mensagem;
+    saidaDiv.className = "alert " + classe;
+}
+</script>
 </body>
 </html>
