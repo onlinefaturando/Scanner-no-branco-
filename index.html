@@ -3,76 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>White Scanner - ULTIMATE</title>
-    <script src="https://jsdelivr.net"></script>
+    <title>Pro Scanner Números</title>
     <style>
-        :root { --neon-green: #22c55e; --dark-bg: #020617; --card-bg: #1e293b; --panic-red: #ef4444; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: #fff; margin: 0; padding: 10px; }
-        .container { max-width: 500px; margin: auto; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #334155; position: relative; }
+        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
+        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:400px; }
+        .grid-numeros { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
         
-        /* Dashboard */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .stat-item { background: #0f172a; padding: 10px; border-radius: 12px; text-align: center; }
-        .stat-val { display: block; font-size: 20px; font-weight: bold; color: var(--neon-green); }
+        /* Cores dos Botões */
+        .btn-n { padding:10px; border:none; border-radius:8px; color:#fff; font-weight:bold; cursor:pointer; }
+        .vermelho { background: #ef4444; }
+        .preto { background: #1e293b; border: 1px solid #334155; }
+        .branco { background: #f8fafc; color: #000; }
         
-        /* Botões */
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn-main { background: var(--neon-green); color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: 900; cursor: pointer; grid-column: span 2; }
-        .btn-panic { background: var(--panic-red); color: #fff; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .btn-export { background: #3b82f6; color: #fff; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        
-        canvas { background: #0f172a; border-radius: 12px; padding: 10px; margin-bottom: 15px; }
-        input { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 15px; width: 92%; border-radius: 12px; text-align: center; margin-bottom: 10px; }
-        
-        .pulse { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .historico { background: #0f172a; padding: 10px; border-radius: 10px; min-height: 40px; margin-bottom: 15px; word-wrap: break-word; }
+        .alert { font-size:18px; font-weight: bold; color: #22c55e; }
+        .limpar { background: #64748b; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card" id="timerCard">
-        <div id="relogio" style="font-size: 28px; font-weight: bold;">00:00:00</div>
-        <div id="statusMinuto">Aguardando janela...</div>
+<h2>⚪ Pro Scanner (Números)</h2>
+
+<div class="card">
+    <div class="grid-numeros">
+        <!-- Botão Branco -->
+        <button class="btn-n branco" onclick="addNum(0)">0</button>
+        <!-- Vermelhos -->
+        <button class="btn-n vermelho" onclick="addNum(1)">1</button>
+        <button class="btn-n vermelho" onclick="addNum(2)">2</button>
+        <button class="btn-n vermelho" onclick="addNum(3)">3</button>
+        <button class="btn-n vermelho" onclick="addNum(4)">4</button>
+        <button class="btn-n vermelho" onclick="addNum(5)">5</button>
+        <button class="btn-n vermelho" onclick="addNum(6)">6</button>
+        <button class="btn-n vermelho" onclick="addNum(7)">7</button>
+        <!-- Pretos -->
+        <button class="btn-n preto" onclick="addNum(8)">8</button>
+        <button class="btn-n preto" onclick="addNum(9)">9</button>
+        <button class="btn-n preto" onclick="addNum(10)">10</button>
+        <button class="btn-n preto" onclick="addNum(11)">11</button>
+        <button class="btn-n preto" onclick="addNum(12)">12</button>
+        <button class="btn-n preto" onclick="addNum(13)">13</button>
+        <button class="btn-n preto" onclick="addNum(14)">14</button>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-item"><span style="font-size:10px; color:#94a3b8;">BANCA TESTE</span><span class="stat-val" id="bancaTxt">R$ 100,00</span></div>
-        <div class="stat-item"><span style="font-size:10px; color:#94a3b8;">WIN RATE</span><span class="stat-val" id="winRate">0%</span></div>
-    </div>
-
-    <canvas id="meuGrafico" height="140"></canvas>
-
-    <div class="card">
-        <input id="inputCores" placeholder="Últimas cores (Ex: R,B,W)">
-        <button class="btn-main" onclick="processar()">ANALISAR ENTRADA</button>
-        
-        <div class="btn-group">
-            <button class="btn-panic" onclick="panicReset()">PÂNICO (RESET)</button>
-            <button class="btn-export" onclick="exportarRelatorio()">EXPORTAR LOG</button>
-        </div>
-    </div>
+    <p>Histórico recente:</p>
+    <div class="historico" id="historico"></div>
+    
+    <div class="alert" id="saida">Aguardando dados...</div>
+    
+    <button class="limpar" onclick="limpar()">Limpar Histórico</button>
 </div>
 
 <script>
-    let banca = 100.00;
-    let acertos = 0;
-    let total = 0;
-    let historicoAcoes = ["Início: R$ 100,00"];
+    let seqNumeros = [];
+    let seqCores = [];
 
-    // Config Gráfico
-    const ctx = document.getElementById('meuGrafico').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: { labels: ['0'], datasets: [{ data: [100], borderColor: '#22c55e', tension: 0.3, fill: false }] },
-        options: { plugins: { legend: false }, scales: { y: { display: false }, x: { display: false } } }
-    });
+    function addNum(n) {
+        seqNumeros.push(n);
+        
+        // Associação Número -> Cor
+        let cor = "";
+        if (n === 0) cor = "W";
+        else if (n >= 1 && n <= 7) cor = "R";
+        else cor = "B";
+        
+        seqCores.push(cor);
+        atualizarTela();
+        analisar();
+    }
 
-    function atualizarRelogio() {
-        const agora = new Date();
-        const m = agora.getMinutes();
-        document.getElementById('relogio').innerText = agora.toLocaleTimeString();
-        const alvos = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-        const status = document.getElementById('statusMinuto');
-        const card = document.getElementById('timerCard');
+    function atualizarTela() {
+        document.getElementById('historico').innerText = seqNumeros.join(' → ');
+    }
+
+    function analisar() {
+        let semBranco = 0;
+        for (let i = seqCores.length - 1; i >= 0; i--) {
+            if (seqCores[i] === 'W') break;
+            semBranco++;
+        }
+
+        let ultimasCores = seqCores.slice(-6).join('');
+        let ultimoNum = seqNumeros[seqNumeros.length - 1];
+        
+        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimasCores);
+        let repeticao = /(RRR|BBB)/.test(ultimasCores);
+        let saida = "";
+
+        // Lógica com base nos números e cores
+        if (ultimoNum === 0) {
+            saida = "⚪ Branco detectado! Resetando contagem.";
+        } else if (semBranco >= 15 && alternancia) {
+            saida = "🔥 ALTA CHANCE DE BRANCO (Padrão Xadrez)";
+        } else if (ultimoNum === 7 || ultimoNum === 8) {
+            saida = "⚠️ NÚMERO PUXADOR: Atenção ao Branco";
+        } else if (semBranco >= 30) {
+            saida = "🚨 CLUSTER: Branco muito atr
