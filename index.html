@@ -1,101 +1,85 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Scanner Números</title>
+    <title>White Scanner Pro - Gestão & Safety</title>
     <style>
-        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
-        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:400px; }
-        .grid-numeros { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
-        
-        /* Cores dos Botões */
-        .btn-n { padding:10px; border:none; border-radius:8px; color:#fff; font-weight:bold; cursor:pointer; }
-        .vermelho { background: #ef4444; }
-        .preto { background: #1e293b; border: 1px solid #334155; }
-        .branco { background: #f8fafc; color: #000; }
-        
-        .historico { background: #0f172a; padding: 10px; border-radius: 10px; min-height: 40px; margin-bottom: 15px; word-wrap: break-word; }
-        .alert { font-size:18px; font-weight: bold; color: #22c55e; }
-        .limpar { background: #64748b; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-top: 10px; }
+        body { font-family: Arial; background:#0f172a; color:#fff; text-align:center; padding:20px; }
+        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:450px; border: 1px solid #334155; }
+        button { padding:15px; border:none; border-radius:12px; background:#22c55e; color:#000; font-weight:bold; width:100%; font-size:18px; cursor:pointer; margin-top:10px; }
+        .btn-stop { background:#ef4444; color:#fff; margin-top:5px; }
+        input { padding:15px; border-radius:12px; border:none; width:90%; font-size:16px; margin-bottom:10px; background:#334155; color:#fff; text-align:center; }
+        .alert { font-size:16px; margin-top:15px; line-height:1.6; }
+        .win { color: #22c55e; font-weight: bold; }
+        .danger { background:#7f1d1d; padding:10px; border-radius:10px; color:#fca5a5; font-weight:bold; }
     </style>
 </head>
 <body>
-
-<h2>⚪ Pro Scanner (Números)</h2>
-
-<div class="card">
-    <div class="grid-numeros">
-        <!-- Botão Branco -->
-        <button class="btn-n branco" onclick="addNum(0)">0</button>
-        <!-- Vermelhos -->
-        <button class="btn-n vermelho" onclick="addNum(1)">1</button>
-        <button class="btn-n vermelho" onclick="addNum(2)">2</button>
-        <button class="btn-n vermelho" onclick="addNum(3)">3</button>
-        <button class="btn-n vermelho" onclick="addNum(4)">4</button>
-        <button class="btn-n vermelho" onclick="addNum(5)">5</button>
-        <button class="btn-n vermelho" onclick="addNum(6)">6</button>
-        <button class="btn-n vermelho" onclick="addNum(7)">7</button>
-        <!-- Pretos -->
-        <button class="btn-n preto" onclick="addNum(8)">8</button>
-        <button class="btn-n preto" onclick="addNum(9)">9</button>
-        <button class="btn-n preto" onclick="addNum(10)">10</button>
-        <button class="btn-n preto" onclick="addNum(11)">11</button>
-        <button class="btn-n preto" onclick="addNum(12)">12</button>
-        <button class="btn-n preto" onclick="addNum(13)">13</button>
-        <button class="btn-n preto" onclick="addNum(14)">14</button>
+    <h2>⚪ White Scanner (V4 - Anti-Quebra)</h2>
+    <div class="card">
+        <p>Aposta no Branco (R$):</p>
+        <input type="number" id="valorBranco" value="2">
+        
+        <p>Rodada Atual (Gale):</p>
+        <input type="number" id="galeAtual" value="0" min="0" max="10">
+        
+        <p>Últimos Números (ex: 14,4,14):</p>
+        <input id="input" placeholder="Digite os números aqui...">
+        
+        <button onclick="analisar()">ESCANEAR ENTRADA</button>
+        <button class="btn-stop" onclick="resetar()">RESETAR CICLO</button>
+        
+        <div class="alert" id="saida"></div>
     </div>
 
-    <p>Histórico recente:</p>
-    <div class="historico" id="historico"></div>
-    
-    <div class="alert" id="saida">Aguardando dados...</div>
-    
-    <button class="limpar" onclick="limpar()">Limpar Histórico</button>
-</div>
-
 <script>
-    let seqNumeros = [];
-    let seqCores = [];
-
-    function addNum(n) {
-        seqNumeros.push(n);
-        
-        // Associação Número -> Cor
-        let cor = "";
-        if (n === 0) cor = "W";
-        else if (n >= 1 && n <= 7) cor = "R";
-        else cor = "B";
-        
-        seqCores.push(cor);
-        atualizarTela();
-        analisar();
+function analisar(){
+    let entrada = document.getElementById('input').value.trim();
+    let vBrancoBase = parseFloat(document.getElementById('valorBranco').value) || 2;
+    let gale = parseInt(document.getElementById('galeAtual').value);
+    let arr = entrada.split(',');
+    let ultimoNum = parseInt(arr[arr.length-1]);
+    
+    // 1. GESTÃO DE STOP LOSS (Limite de 5 entradas para proteger banca)
+    if(gale >= 5) {
+        document.getElementById('saida').innerHTML = `<div class="danger">🚨 STOP LOSS ATINGIDO!<br>O mercado está em ciclo de absorção. Pare por 15 minutos!</div>`;
+        return;
     }
 
-    function atualizarTela() {
-        document.getElementById('historico').innerText = seqNumeros.join(' → ');
+    // 2. CÁLCULO DE VALORES (Dobrando proteção para cobrir perdas anteriores)
+    let multiplicador = Math.pow(2, gale);
+    let vBrancoAtual = vBrancoBase; // Mantém fixo ou escala levemente
+    let vDefesa = (vBrancoBase + (vBrancoBase * gale)) * 2; 
+
+    // 3. DETECÇÃO DE ESPELHO (Finais iguais: 1-11, 4-14)
+    let e_Espelho = false;
+    if(arr.length >= 2) {
+        let n1 = arr[arr.length-1].slice(-1);
+        let n2 = (arr[arr.length-2]) ? arr[arr.length-2].slice(-1) : null;
+        if(n1 === n2) e_Espelho = true;
     }
 
-    function analisar() {
-        let semBranco = 0;
-        for (let i = seqCores.length - 1; i >= 0; i--) {
-            if (seqCores[i] === 'W') break;
-            semBranco++;
-        }
+    // 4. COR DE DEFESA
+    let corDefesa = (ultimoNum >= 1 && ultimoNum <= 7) ? "VERMELHO" : "PRETO";
+    if (isNaN(ultimoNum)) corDefesa = "ANALISANDO...";
 
-        let ultimasCores = seqCores.slice(-6).join('');
-        let ultimoNum = seqNumeros[seqNumeros.length - 1];
-        
-        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimasCores);
-        let repeticao = /(RRR|BBB)/.test(ultimasCores);
-        let saida = "";
+    // 5. MENSAGEM DE SAÍDA
+    let msg = e_Espelho ? `<span class="win">🪞 ESPELHO DETECTADO!</span><br>` : `🔍 PADRÃO EM ANÁLISE...<br>`;
+    
+    msg += `📉 <b>GALE ATUAL: ${gale}</b><br>
+            ⚪ Apostar no Branco: <b>R$ ${vBrancoAtual.toFixed(2)}</b><br>
+            🛡️ Proteção no ${corDefesa}: <b>R$ ${vDefesa.toFixed(2)}</b><br>
+            ---<br>
+            ⚠️ <i>Se não bater, suba a Rodada Atual para ${gale + 1}</i>`;
 
-        // Lógica com base nos números e cores
-        if (ultimoNum === 0) {
-            saida = "⚪ Branco detectado! Resetando contagem.";
-        } else if (semBranco >= 15 && alternancia) {
-            saida = "🔥 ALTA CHANCE DE BRANCO (Padrão Xadrez)";
-        } else if (ultimoNum === 7 || ultimoNum === 8) {
-            saida = "⚠️ NÚMERO PUXADOR: Atenção ao Branco";
-        } else if (semBranco >= 30) {
-            saida = "🚨 CLUSTER: Branco muito atr
+    document.getElementById('saida').innerHTML = msg;
+}
+
+function resetar(){
+    document.getElementById('galeAtual').value = 0;
+    document.getElementById('saida').innerHTML = "Ciclo resetado. Aguardando novo sinal.";
+}
+</script>
+</body>
+</html>
