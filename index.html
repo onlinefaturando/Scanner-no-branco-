@@ -1,85 +1,76 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>White Scanner Pro - Gestão & Safety</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Scanner Pro</title>
     <style>
-        body { font-family: Arial; background:#0f172a; color:#fff; text-align:center; padding:20px; }
-        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:450px; border: 1px solid #334155; }
-        button { padding:15px; border:none; border-radius:12px; background:#22c55e; color:#000; font-weight:bold; width:100%; font-size:18px; cursor:pointer; margin-top:10px; }
-        .btn-stop { background:#ef4444; color:#fff; margin-top:5px; }
-        input { padding:15px; border-radius:12px; border:none; width:90%; font-size:16px; margin-bottom:10px; background:#334155; color:#fff; text-align:center; }
-        .alert { font-size:16px; margin-top:15px; line-height:1.6; }
-        .win { color: #22c55e; font-weight: bold; }
-        .danger { background:#7f1d1d; padding:10px; border-radius:10px; color:#fca5a5; font-weight:bold; }
+        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
+        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:400px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        button { padding:15px; border:none; border-radius:12px; background:#22c55e; color:#000; font-weight:bold; width:100%; font-size:18px; cursor: pointer; margin-top: 10px; }
+        input { padding:15px; border-radius:12px; border:2px solid #334155; width:90%; font-size:16px; background: #0f172a; color: #fff; text-transform: uppercase; }
+        .alert { font-size:18px; margin:20px 0; font-weight: bold; min-height: 24px; color: #22c55e; }
+        .history { display: flex; justify-content: center; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
+        .dot { width: 15px; height: 15px; border-radius: 50%; border: 1px solid #fff; }
+        .dot.R { background: #ef4444; } .dot.B { background: #000; } .dot.W { background: #fff; }
     </style>
 </head>
 <body>
-    <h2>⚪ White Scanner (V4 - Anti-Quebra)</h2>
+    <h2>⚪ White Scanner Pro</h2>
     <div class="card">
-        <p>Aposta no Branco (R$):</p>
-        <input type="number" id="valorBranco" value="2">
-        
-        <p>Rodada Atual (Gale):</p>
-        <input type="number" id="galeAtual" value="0" min="0" max="10">
-        
-        <p>Últimos Números (ex: 14,4,14):</p>
-        <input id="input" placeholder="Digite os números aqui...">
-        
-        <button onclick="analisar()">ESCANEAR ENTRADA</button>
-        <button class="btn-stop" onclick="resetar()">RESETAR CICLO</button>
-        
-        <div class="alert" id="saida"></div>
+        <p>Insira a sequência (ex: R,B,W,R):</p>
+        <input id="input" placeholder="R, B, R, B..." autocomplete="off">
+        <button onclick="analisar()">ESCANEAR AGORA</button>
+        <div class="alert" id="saida">Aguardando dados...</div>
+        <div class="history" id="historico"></div>
     </div>
 
 <script>
-function analisar(){
-    let entrada = document.getElementById('input').value.trim();
-    let vBrancoBase = parseFloat(document.getElementById('valorBranco').value) || 2;
-    let gale = parseInt(document.getElementById('galeAtual').value);
-    let arr = entrada.split(',');
-    let ultimoNum = parseInt(arr[arr.length-1]);
-    
-    // 1. GESTÃO DE STOP LOSS (Limite de 5 entradas para proteger banca)
-    if(gale >= 5) {
-        document.getElementById('saida').innerHTML = `<div class="danger">🚨 STOP LOSS ATINGIDO!<br>O mercado está em ciclo de absorção. Pare por 15 minutos!</div>`;
-        return;
+    function analisar(){
+        const campo = document.getElementById('input');
+        const saida = document.getElementById('saida');
+        const histDiv = document.getElementById('historico');
+        
+        // Limpa espaços e cria array
+        let arr = campo.value.toUpperCase().split(',').map(i => i.trim()).filter(i => i !== "");
+
+        if(arr.length === 0) {
+            saida.innerText = "⚠️ Digite algo!";
+            return;
+        }
+
+        // Desenha histórico visual
+        histDiv.innerHTML = "";
+        arr.slice(-10).forEach(cor => {
+            let dot = document.createElement('div');
+            dot.className = `dot ${cor}`;
+            histDiv.appendChild(dot);
+        });
+
+        // Lógica de análise
+        let semBranco = 0;
+        for(let i = arr.length - 1; i >= 0; i--){
+            if(arr[i] === 'W') break;
+            semBranco++;
+        }
+
+        let ultimos = arr.slice(-6).join('');
+        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
+        let repeticao = /(RRR|BBB)/.test(ultimos);
+
+        if(semBranco >= 35 && arr[arr.length-1] === 'W'){
+            saida.innerText = "⚪ Branco saiu! Aguardando novo ciclo.";
+        } else if(semBranco >= 20 && alternancia){
+            saida.innerText = "🔥 ENTRAR AGORA (Alta chance Branco)";
+            saida.style.color = "#fbbf24";
+        } else if(semBranco >= 35 && !repeticao){
+            saida.innerText = "🚨 CLUSTER ATIVO (Possível Duplo)";
+            saida.style.color = "#f87171";
+        } else{
+            saida.innerText = "❌ Aguarde (" + semBranco + " rodadas sem W)";
+            saida.style.color = "#94a3b8";
+        }
     }
-
-    // 2. CÁLCULO DE VALORES (Dobrando proteção para cobrir perdas anteriores)
-    let multiplicador = Math.pow(2, gale);
-    let vBrancoAtual = vBrancoBase; // Mantém fixo ou escala levemente
-    let vDefesa = (vBrancoBase + (vBrancoBase * gale)) * 2; 
-
-    // 3. DETECÇÃO DE ESPELHO (Finais iguais: 1-11, 4-14)
-    let e_Espelho = false;
-    if(arr.length >= 2) {
-        let n1 = arr[arr.length-1].slice(-1);
-        let n2 = (arr[arr.length-2]) ? arr[arr.length-2].slice(-1) : null;
-        if(n1 === n2) e_Espelho = true;
-    }
-
-    // 4. COR DE DEFESA
-    let corDefesa = (ultimoNum >= 1 && ultimoNum <= 7) ? "VERMELHO" : "PRETO";
-    if (isNaN(ultimoNum)) corDefesa = "ANALISANDO...";
-
-    // 5. MENSAGEM DE SAÍDA
-    let msg = e_Espelho ? `<span class="win">🪞 ESPELHO DETECTADO!</span><br>` : `🔍 PADRÃO EM ANÁLISE...<br>`;
-    
-    msg += `📉 <b>GALE ATUAL: ${gale}</b><br>
-            ⚪ Apostar no Branco: <b>R$ ${vBrancoAtual.toFixed(2)}</b><br>
-            🛡️ Proteção no ${corDefesa}: <b>R$ ${vDefesa.toFixed(2)}</b><br>
-            ---<br>
-            ⚠️ <i>Se não bater, suba a Rodada Atual para ${gale + 1}</i>`;
-
-    document.getElementById('saida').innerHTML = msg;
-}
-
-function resetar(){
-    document.getElementById('galeAtual').value = 0;
-    document.getElementById('saida').innerHTML = "Ciclo resetado. Aguardando novo sinal.";
-}
 </script>
 </body>
 </html>
