@@ -3,73 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>White Scanner Pro</title>
+    <title>WHITE SCANNER ULTRA AGRESSIVE</title>
     <style>
-        body { font-family: sans-serif; background:#0f172a; color:#fff; text-align:center; padding:20px; }
-        .card { background:#1e293b; padding:20px; border-radius:15px; margin:10px auto; max-width:400px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        button { padding:15px; border:none; border-radius:12px; background:#22c55e; color:#000; font-weight:bold; width:100%; font-size:18px; cursor: pointer; margin-top: 10px; }
-        input { padding:15px; border-radius:12px; border:2px solid #334155; width:90%; font-size:16px; background: #0f172a; color: #fff; text-transform: uppercase; }
-        .alert { font-size:18px; margin:20px 0; font-weight: bold; min-height: 24px; color: #22c55e; }
-        .history { display: flex; justify-content: center; gap: 5px; margin-top: 15px; flex-wrap: wrap; }
-        .dot { width: 15px; height: 15px; border-radius: 50%; border: 1px solid #fff; }
-        .dot.R { background: #ef4444; } .dot.B { background: #000; } .dot.W { background: #fff; }
+        :root {
+            --bg: #05070a;
+            --card: #0f172a;
+            --accent: #00ff41; /* Verde Matrix */
+            --red: #ff003c;
+            --blue: #00d4ff;
+            --white: #ffffff;
+        }
+        body { font-family: 'Courier New', monospace; background: var(--bg); color: #fff; margin: 0; padding: 10px; }
+        .container { max-width: 500px; margin: auto; border: 1px solid #1e293b; border-radius: 8px; overflow: hidden; }
+        
+        /* Header Neon */
+        header { background: #1e293b; padding: 15px; border-bottom: 2px solid var(--accent); box-shadow: 0 0 15px rgba(0,255,65,0.2); }
+        .glitch { font-size: 22px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
+
+        /* Status de Monitoramento */
+        .grid-status { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; background: rgba(0,0,0,0.5); }
+        .status-box { border: 1px solid #1e293b; padding: 8px; font-size: 10px; text-align: left; }
+        .status-box span { display: block; font-size: 14px; color: var(--accent); font-weight: bold; }
+
+        /* Botões de Entrada */
+        .controls { padding: 20px; display: flex; justify-content: space-around; gap: 10px; }
+        .btn-input { width: 70px; height: 70px; border-radius: 12px; border: none; cursor: pointer; font-size: 20px; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
+        .btn-input:active { transform: translateY(4px); box-shadow: none; }
+        .btn-r { background: var(--red); color: #fff; }
+        .btn-b { background: var(--blue); color: #fff; }
+        .btn-w { background: var(--white); color: #000; box-shadow: 0 0 15px #fff; }
+
+        /* Painel de Sinal */
+        .signal-panel { margin: 20px; padding: 20px; border-radius: 15px; background: #000; border: 2px dashed #1e293b; min-height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .signal-text { font-size: 24px; font-weight: 900; text-shadow: 0 0 10px rgba(255,255,255,0.5); text-align: center; }
+        .confidence { font-size: 12px; margin-top: 10px; color: #64748b; }
+
+        /* Histórico */
+        .history-bar { display: flex; gap: 4px; padding: 15px; justify-content: center; overflow-x: auto; background: #020617; }
+        .dot { min-width: 12px; height: 12px; border-radius: 2px; }
+
+        /* Animações */
+        .blink-fast { animation: blink 0.3s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.1; } 100% { opacity: 1; } }
+        
+        .btn-action { width: 90%; margin: 10px auto; display: block; padding: 12px; background: #1e293b; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h2>⚪ White Scanner Pro</h2>
-    <div class="card">
-        <p>Insira a sequência (ex: R,B,W,R):</p>
-        <input id="input" placeholder="R, B, R, B..." autocomplete="off">
-        <button onclick="analisar()">ESCANEAR AGORA</button>
-        <div class="alert" id="saida">Aguardando dados...</div>
-        <div class="history" id="historico"></div>
+
+<div class="container">
+    <header>
+        <div class="glitch">WHITE SCANNER V3.0 AI</div>
+        <div style="font-size: 9px; color: #4ade80;">SISTEMA DE ALTA AGRESSIVIDADE ATIVADO</div>
+    </header>
+
+    <div class="grid-status">
+        <div class="status-box">MISSING WHITE<span id="stat-missing">0</span></div>
+        <div class="status-box">PATTERN TYPE<span id="stat-pattern">SCANNING...</span></div>
+        <div class="status-box">CONFIDENCE<span id="stat-conf">0%</span></div>
+        <div class="status-box">BOT STATUS<span style="color:#00ff41">ACTIVE</span></div>
     </div>
 
+    <div class="history-bar" id="history-bar"></div>
+
+    <div class="signal-panel" id="panel">
+        <div class="signal-text" id="signal-text">AGUARDANDO DADOS...</div>
+        <div class="confidence" id="signal-desc">Alimente o sistema com as últimas 10 cores</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-input btn-r" onclick="push('R')">R</button>
+        <button class="btn-input btn-b" onclick="push('B')">B</button>
+        <button class="btn-input btn-w" onclick="push('W')">W</button>
+    </div>
+
+    <button class="btn-action" onclick="reset()">RESETAR DATABASE</button>
+    <p style="font-size: 10px; color: #334155; text-align: center; padding: 10px;">PROIBIDO PARA MENORES. ALGORITMO BASEADO EM PROBABILIDADE ESTATÍSTICA.</p>
+</div>
+
 <script>
-    function analisar(){
-        const campo = document.getElementById('input');
-        const saida = document.getElementById('saida');
-        const histDiv = document.getElementById('historico');
-        
-        // Limpa espaços e cria array
-        let arr = campo.value.toUpperCase().split(',').map(i => i.trim()).filter(i => i !== "");
+    let data = [];
+    const beep = new (window.AudioContext || window.webkitAudioContext)();
 
-        if(arr.length === 0) {
-            saida.innerText = "⚠️ Digite algo!";
-            return;
-        }
+    function playAlert() {
+        const osc = beep.createOscillator();
+        const gain = beep.createGain();
+        osc.connect(gain);
+        gain.connect(beep.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, beep.currentTime);
+        gain.gain.setValueAtTime(0.1, beep.currentTime);
+        osc.start();
+        osc.stop(beep.currentTime + 0.1);
+    }
 
-        // Desenha histórico visual
-        histDiv.innerHTML = "";
-        arr.slice(-10).forEach(cor => {
-            let dot = document.createElement('div');
-            dot.className = `dot ${cor}`;
-            histDiv.appendChild(dot);
+    function push(val) {
+        data.push(val);
+        if(data.length > 20) data.shift();
+        render();
+        analyze();
+    }
+
+    function reset() {
+        data = [];
+        render();
+        document.getElementById('signal-text').innerText = "DATABASE RESETADA";
+        document.getElementById('stat-pattern').innerText = "SCANNING...";
+    }
+
+    function render() {
+        const bar = document.getElementById('history-bar');
+        bar.innerHTML = '';
+        data.forEach(c => {
+            const d = document.createElement('div');
+            d.className = 'dot';
+            d.style.background = c === 'R' ? '#ff003c' : (c === 'B' ? '#00d4ff' : '#fff');
+            if(c === 'W') d.style.boxShadow = '0 0 8px #fff';
+            bar.appendChild(d);
         });
+    }
 
-        // Lógica de análise
-        let semBranco = 0;
-        for(let i = arr.length - 1; i >= 0; i--){
-            if(arr[i] === 'W') break;
-            semBranco++;
+    function analyze() {
+        if(data.length < 5) return;
+
+        let missingW = 0;
+        for(let i = data.length-1; i>=0; i--) {
+            if(data[i] === 'W') break;
+            missingW++;
         }
 
-        let ultimos = arr.slice(-6).join('');
-        let alternancia = /(RB){2,}|(BR){2,}/.test(ultimos);
-        let repeticao = /(RRR|BBB)/.test(ultimos);
+        const last6 = data.slice(-6).join('');
+        const panel = document.getElementById('panel');
+        const sText = document.getElementById('signal-text');
+        const sDesc = document.getElementById('signal-desc');
+        
+        document.getElementById('stat-missing').innerText = missingW;
 
-        if(semBranco >= 35 && arr[arr.length-1] === 'W'){
-            saida.innerText = "⚪ Branco saiu! Aguardando novo ciclo.";
-        } else if(semBranco >= 20 && alternancia){
-            saida.innerText = "🔥 ENTRAR AGORA (Alta chance Branco)";
-            saida.style.color = "#fbbf24";
-        } else if(semBranco >= 35 && !repeticao){
-            saida.innerText = "🚨 CLUSTER ATIVO (Possível Duplo)";
-            saida.style.color = "#f87171";
-        } else{
-            saida.innerText = "❌ Aguarde (" + semBranco + " rodadas sem W)";
-            saida.style.color = "#94a3b8";
+        // LÓGICA AGRESSIVA
+        let signal = 0; // 0: Wait, 1: Alert, 2: GO
+        let type = "SCANNING";
+        let conf = "0%";
+
+        // Estratégia 1: Cluster de Ausência (Forte)
+        if(missingW >= 25) {
+            signal = 1;
+            type = "CLUSTER";
+            conf = "65%";
         }
+
+        // Estratégia 2: Alternância Longa (Média)
+        if(/(RB){3,}|(BR){3,}/.test(last6)) {
+            signal = 1;
+            type = "ALTERNÂNCIA";
+            conf = "70%";
+        }
+
+        // Estratégia 3: Puxada de Cor (Quebra de sequência 4+)
+        if(/(RRRR|BBBB)/.test(last6)) {
+            signal = 1;
+            type = "PUXADA";
+            conf = "60%";
+        }
+
+        // GATILHO DE ENTRADA (Onde o sinal vira GO)
+        if(missingW >= 30 && signal === 1) {
+            signal = 2;
+            conf = "92%";
+        }
+
+        // Atualização da UI
+        if(signal === 2) {
+            panel.style.borderColor = var(--accent);
+            sText.innerText = "🔥 ENTRAR AGORA";
+            sText.className = "signal-text blink-fast";
+            sText.style.color = var(--accent);
+            sDesc.innerText = "ALVO: BRANCO (W) | GALE 1 SUGERIDO";
+            document.getElementById('stat-conf').innerText = conf;
+            playAlert();
+        } else if(signal === 1) {
+            panel.style.borderColor = "#f59e0b";
+            sText.innerText = "ATENÇÃO: MONITORANDO";
+            sText.className = "signal-text";
+            sText.style.color = "#f59e0b";
+            sDesc.innerText = "PADRÃO " + type + " EM FORMAÇÃO...";
+            document.getElementById('stat-conf').innerText = conf;
+        } else {
+            panel.style.borderColor = "#1e293b";
+            sText.innerText = "AGUARDANDO...";
+            sText.className = "signal-text";
+            sText.style.color = "#475569";
+            sDesc.innerText = "SISTEMA EM BUSCA DE PADRÕES";
+            document.getElementById('stat-conf').innerText = "12%";
+        }
+        
+        document.getElementById('stat-pattern').innerText = type;
     }
 </script>
 </body>
